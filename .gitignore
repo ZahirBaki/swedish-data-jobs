@@ -1,0 +1,29 @@
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+# Python caches and build artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+# Jupyter
+.ipynb_checkpoints/
+# Local configuration
+.env
+.env.*
+# Downloaded raw advertisements
+data/raw/*
+# Step 2 datasets, reports and request logs
+data/collections/
+tests/.test-*/
+# Operating system files
+.DS_Store
+Thumbs.db
