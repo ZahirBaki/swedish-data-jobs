@@ -27,3 +27,12 @@ tests/.test-*/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Future processed datasets
+data/processed/
+
+# VS Code local settings
+.vscode/
+
+# Keep example environment configuration
+!.env.example
