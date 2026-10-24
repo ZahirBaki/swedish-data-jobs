@@ -1,0 +1,7 @@
+{
+  "synthetic": true,
+  "real_advertisements": 0,
+  "paid_requests": 0,
+  "generated_by": "python -m tools.build_demo",
+  "warning": "Fictional UI fixtures. No real classifications, research evidence or market statistics."
+}

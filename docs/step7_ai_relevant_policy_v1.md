@@ -1,0 +1,17 @@
+# Step 7 AI-relevant inclusion policy v1 (active for Step 7 publications)
+
+Authorized by the user on 24 October 2026. This is an explicit dashboard policy change, not a modification of historical classifications or precision-first v3 audit decisions.
+
+Include exactly one record per collected advertisement ID when its saved classification is accepted (completed or validated cache hit), schema-valid under its saved classifier version, relevant, and source-grounded. Revalidate saved evidence against the original title and full description using the existing version-aware validators. Legacy exact-quote evidence remains accepted under its own schema. Neither confidence nor quotation independently proves occupational correctness. These are provisional AI classifications, not independent verification.
+
+Do not require deterministic v3 approval, high confidence, lack of model-review flags, or manual review for main-dataset inclusion. Exclude irrelevant, uncertain, invalid, failed, missing and unknown-outcome decisions. Never classify, retry or send network requests in Step 7. Select results using the existing corpus reconciliation precedence: accepted Step 3F 1.1 over older versions, latest accepted within the selected version, validated exact-source cache reuse. A later accepted irrelevant or uncertain decision at the selected version takes precedence over an earlier relevant one. Failed requests do not erase valid completed results.
+
+Preserve original AI fields, model, prompt version, source evidence, prior inclusion fields and every saved v3 audit receipt. Add separate Step 7 inclusion and reporting metadata. Audit-approved only means recorded v3 approval, including v3 approval recorded in baseline provenance; historical inclusion alone does not establish v3 approval. No missing audit is inferred as approval.
+
+Use mutually exclusive reporting scopes: restricted/student opportunities first (saved flags or the existing v3 restricted-title detector), academic research next (saved scope or existing research-title detector), then adjacent, governance, core industry and unresolved. Legacy scope is category-derived and labelled as such. Preserve raw scopes and overlapping opportunity types. Multi-role status is independently filterable; both statuses are selected by default within core industry. Other scopes are available through filters. Scope assignment is reporting metadata, not a relevance exclusion. All accepted relevant scopes remain in the expanded dataset.
+
+Distinct advertisement IDs remain distinct even with identical content. Overall and primary-category counts count each ID once. Preserve null primary categories in the classification, using an explicit unresolved reporting label. Do not add secondary categories to totals.
+
+Reuse previous deterministic extractions and facts. Extract new records with the existing rules and verify exact evidence and match offsets against original fields. Preserve modalities and do not count merely mentioned technologies as requirements. Requirement denominators are distinct advertisements in the selected filters, including jobs without requirements evidence; report evidence coverage separately.
+
+Publish only into a new directory. Verify all pre-existing data file hashes before completing the publication manifest. The dashboard uses completed Step 7 publications by default, with all accepted AI-relevant jobs in core industry selected. Existing v3 policy files and publications remain historical and usable through an explicit dataset override.

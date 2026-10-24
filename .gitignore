@@ -1,38 +1,51 @@
-# Virtual environments
+# Local research: originals, full ads, classifications, checkpoints and run reports
+/data/
+/.local-archive/
+/logs/
+*.log
+
+# Credentials and personal configuration
+.env
+.env.*
+!.env.example
+.envrc
+.streamlit/secrets.toml
+.streamlit/secrets.*.toml
+*credentials*.json
+*service-account*.json
+*.pem
+*.key
+.netrc
+.aws/
+.ssh/
+.codex/
+.agents/
+.vscode/
+.idea/
+
+# Environments, caches and build/test artifacts
 .venv/
 venv/
 env/
 ENV/
-# Python caches and build artifacts
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.ipynb_checkpoints/
+.test-tmp/
+tests/.test-*/
 .coverage
+.coverage.*
 htmlcov/
 build/
 dist/
 *.egg-info/
-# Jupyter
-.ipynb_checkpoints/
-# Local configuration
-.env
-.env.*
-# Downloaded raw advertisements
-data/raw/*
-# Step 2 datasets, reports and request logs
-data/collections/
-tests/.test-*/
-# Operating system files
+
+# OS and editor temporary files
 .DS_Store
 Thumbs.db
-
-# Future processed datasets
-data/processed/
-
-# VS Code local settings
-.vscode/
-
-# Keep example environment configuration
-!.env.example
+*.tmp
+*.bak
+*~

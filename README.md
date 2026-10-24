@@ -1,168 +1,130 @@
 # Swedish Data & AI Job Market Analyzer
 
-A beginner-friendly Data Engineering portfolio project exploring demand for data and AI professionals in Sweden. The long-term goal is to examine technical skills, Swedish-language requirements, education, experience levels, and hiring trends.
+An end-to-end Python portfolio project exploring what Data & AI job advertisements ask candidates to know. It combines auditable collection from Swedish JobTech APIs, GPT-4.1 Mini classification, deterministic requirements extraction and an interactive Streamlit dashboard.
 
-Planned job categories:
-- Data Analysts
-- Data Engineers
-- Data Scientists
-- Machine Learning Engineers
-- AI Engineers
+The motivation is to separate occupational relevance from keyword matches, and actual applicant requirements from technologies mentioned in passing. Every extracted fact retains its original excerpt and character offsets so a reader can inspect the evidence behind a chart.
 
-## Time window and scope
+## Try the dashboard
 
-The analysis will focus on the last 6-12 months to reflect recent demand while allowing comparisons across months. A shorter sample can be affected by seasonality, and advertisements are only a partial view of hiring activity.
+**No API key or local research data is needed.** A fresh clone opens a small, explicitly fictional example dataset. Existing local research publications take precedence, so the working research dashboard is preserved.
 
-**Step 1 does not apply a date or country filter.** It requests one page of up to 100 keyword matches for `data engineer`. Results are not guaranteed to be from the last six months, located in Sweden, or representative of the whole market. A keyword match does not establish a role category. Before trend analysis, we will validate dates and geography and investigate historical coverage and the appropriate historical-advertisement source.
+Python **3.11 or newer** is required; the current environment was validated on Python 3.14. Run from the repository root:
 
-## Data source
+```bash
+python -m venv .venv
+# macOS/Linux
+source .venv/bin/activate
+# Windows PowerShell: .\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m streamlit run dashboard/app.py
+```
 
-Step 1 uses Arbetsförmedlingen's official Swedish JobTech JobSearch API:
-- Endpoint: https://jobsearch.api.jobtechdev.se/search
-- Parameters: `q="data engineer"`, `limit=100`, `offset=0`
-- [Official getting-started documentation and response fields](https://gitlab.com/arbetsformedlingen/job-ads/jobsearch-apis/-/blob/main/docs/GettingStartedJobSearchEN.md)
-- [Official advertisement field reference](https://gitlab.com/arbetsformedlingen/job-ads/jobsearch/jobsearch-api/-/blob/main/docs/AdFields.md)
+Open [localhost:8501](http://localhost:8501). To select the fictional demo explicitly:
 
-The notebook uses `hits`, `total.value`, `headline`, `employer.name`, `publication_date`, and `workplace_address` fields. Optional values can be missing or null. Requests need internet access; HTTP, connection, and timeout problems produce readable errors. A failed request stops execution; fix the problem and rerun from the top.
+```powershell
+$env:JOBS_DASHBOARD_DATA = "examples/demo_dataset"
+python -m streamlit run dashboard/app.py
+```
 
-## Project layout
+On macOS/Linux, use `JOBS_DASHBOARD_DATA=examples/demo_dataset python -m streamlit run dashboard/app.py`.
+
+To use the existing full local publication instead, set `JOBS_DASHBOARD_DATA` to `data/processed/step7-expanded-20261024`. Unset the variable to restore automatic discovery of the latest completed publication. The dashboard reports missing or invalid explicit paths without downloading, classifying or overwriting anything.
+
+## Findings from the collected subset
+
+The research run covers candidate advertisements dated **21 April?21 October 2026**. These figures are model-derived results from a collected subset, **not verified counts for the entire Swedish job market**.
+
+| Measure | Advertisements |
+|---|---:|
+| Collected candidates | 5,023 |
+| Successfully classified, including validated exact-source reuse | 3,138 |
+| Accepted, source-grounded AI-relevant classifications | 1,778 |
+| Core-industry advertisements in the default view | 1,111 |
+| Jobs with usable requirements evidence, all relevant scopes | 1,035 |
+| Jobs with usable requirements evidence, core industry | 611 |
+| Recorded strict v3 duties-audit approvals | 214 |
+
+The largest primary categories across all relevant scopes are AI/ML Research (351), Data Engineer (333), AI Engineer (209), Data/AI Management (170) and Data Analyst (151). Each advertisement contributes to exactly one primary-category total; secondary categories do not add advertisements. Research opportunities and adjacent roles are separate from the default core-industry view.
+
+See [the aggregate results and category breakdown](docs/results.md). The committed demo is fictional and is never used to calculate these research findings.
+
+## How the pipeline works
+
+```mermaid
+flowchart LR
+    A[JobTech JobSearch and Historical APIs] --> B[Date and geography checks]
+    B --> C[ID deduplication and provenance]
+    C --> D[GPT-4.1 Mini classification]
+    D --> E[Schema and source-evidence validation]
+    E --> F[Accepted AI-relevant dataset]
+    F --> G[Deterministic requirements extraction]
+    G --> H[Streamlit dashboard]
+    D --> I[Irrelevant, uncertain and failed records kept separately]
+```
+
+1. **Collect:** Search the Swedish JobTech JobSearch and Historical APIs using documented queries, Swedish geography and publication dates. Preserve raw responses and query provenance locally. See [API decisions and official references](docs/api_notes.md).
+2. **Clean and classify:** Normalize working text without replacing original descriptions. GPT-4.1 Mini assigns relevance, primary/secondary occupation categories, scope, opportunity flags and supporting source evidence. Validate accepted outputs against the saved schema and original text.
+3. **Reuse safely:** Compatible caches and completed classifications avoid repeated paid requests. The corpus workflow provides dry runs, conservative budget reservations, checkpoints and safe resume. Unknown request outcomes stay reserved and are not automatically retried.
+4. **Include:** The approved [Step 7 policy](docs/step7_ai_relevant_policy_v1.md) accepts schema-valid, source-grounded, relevant AI classifications. Historical v3 duties audits remain quality metadata and an optional filter, rather than a mandatory gate. Uncertain, irrelevant, invalid and failed classifications stay outside the analysis.
+5. **Extract:** Existing deterministic rules extract skills, cloud platforms, tools, Swedish/English language, education, professional experience and explicit seniority. Distinguish required, preferred, required alternatives, merely mentioned, ambiguous and negated qualifications; retain exact source offsets.
+6. **Publish:** Merge by advertisement ID, preserve original classifications and evidence, write a new versioned publication and verify historical file hashes. Refresh the dashboard only from completed publications.
+
+## Dashboard
+
+The default view shows **all accepted AI-relevant jobs within core industry**. Filters cover inclusion quality, occupation and original AI scopes, opportunity type, multi-role status, category, region and seniority.
+
+Charts show category and location distributions, requested skills and platforms, education, languages, experience and seniority. Coverage tables report how much usable evidence exists. The advertisement explorer displays original descriptions, classification provenance, historical audit metadata and exact requirement excerpts with downloadable offsets.
+
+All requirement percentages use **distinct advertisements in the current filtered analysis**, including jobs with missing evidence. Skills and education levels can overlap, so their percentages must not be added. Missing evidence does not mean a requirement is absent. Advertisements are not unique vacancies.
+
+## Technologies
+
+Python, requests, pandas, GPT-4.1 Mini through an OpenAI-compatible HTTP interface, deterministic text rules, Streamlit, Plotly, Jupyter and Python unittest. Direct dependencies are pinned in `requirements.txt`; no paid API is needed to run the demo or automated tests.
+
+## Repository structure
 
 ```text
-swedish-data-jobs/
-  data/raw/                         # Step 1 downloads, preserved
-  data/collections/                 # Step 2 run folders and logs
-  notebooks/01_explore_api.ipynb     # Step 1, unchanged
-  src/__init__.py
-  src/collect_jobs.py
-  config/search_terms.json
-  docs/api_notes.md
-  tests/test_collect_jobs.py
-  requirements.txt
-  .gitignore
-  README.md
+src/                 Collection, validation, classification, extraction and publications
+dashboard/          Streamlit application (dashboard/app.py)
+config/              Public search terms
+prompts/             Versioned classifier prompts
+notebooks/           Offline demo and research evaluation notebooks
+  archive/           Early API and heuristic exploration, with outputs cleared
+tests/               Mocked unit tests, demo tests and optional local-data regression tests
+docs/                Methodology, results, workflow and repository guide
+  archive/           Historical-stage index (frozen referenced modules stay in src/)
+examples/            Small handwritten synthetic dataset; no real advertisements
+tools/               Offline demo generation and repository security checks
+.github/workflows/   Public-clone test and hygiene checks
+requirements.txt     Pinned direct dependencies
+.env.example         Empty credential placeholders; no secrets
 ```
 
-## Install and run (Windows PowerShell)
+`data/`, `.env`, API caches, checkpoints, logs and local archives are deliberately ignored by Git. Full research datasets remain local. See [the repository guide](docs/repository_guide.md) for current entry points, historical modules and the Git preparation checklist.
 
-From the parent workspace folder:
+## Development and reproducibility
 
-```powershell
-cd C:\Users\zahir\Desktop\projects\swedish-data-jobs
-py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m ipykernel install --user --name swedish-data-jobs --display-name "Python (swedish-data-jobs)"
-.\.venv\Scripts\python.exe -m jupyter notebook notebooks/01_explore_api.ipynb
+```bash
+python -m unittest discover -s tests -q
+python -m tools.check_repository --scan-history
+python -m pip check
 ```
 
-If `py` is unavailable, use `python` for the environment-creation command. These commands call the virtual environment directly, so PowerShell activation is unnecessary.
+Tests use synthetic network responses. Tests that require private local research artifacts are explicitly skipped in a fresh clone; portable unit tests and demo/evidence/filter checks still run. The [offline demo notebook](notebooks/01_dashboard_demo.ipynb) also works without the local collection. Rebuild its fictional fixture using `python -m tools.build_demo`.
 
-In the notebook, select **Python (swedish-data-jobs)** and run all cells from top to bottom. Alternatively, open the project folder in VS Code, install Microsoft's Python and Jupyter extensions if needed, open the notebook, select the `.venv` Python interpreter as its kernel, and choose **Run All**. Start from the project root or `notebooks` folder so the output path resolves correctly.
+The actual research pipeline requires original inputs that are intentionally not redistributed. Historical experiment notebooks require their corresponding local runs. See [full corpus workflow](docs/full_corpus_workflow.md), [requirements schema](docs/requirements_extraction_schema.md) and [Step 7 policy](docs/step7_ai_relevant_policy_v1.md). The pipeline is auditable, but a fresh clone is not claimed to reproduce the research totals without those inputs.
 
-## What Step 1 produces
+### API configuration
 
-- A live API-reported total and the number downloaded (up to 100; fewer if the API returns fewer).
-- A DataFrame, its first 10 rows, and every column's data type.
-- A simplified title, employer, publication date, and location table.
-- One full advertisement printed as nested JSON, when available.
-- The original advertisement list saved as `data/raw/jobtech_data_engineer_<UTC timestamp>.json`, with its exact absolute path printed on success.
+Copy `.env.example` to `.env` for your own reference, but **the project does not load `.env` automatically**. Export credentials in your shell or credential manager. Viewing the dashboard and extracting requirements are offline. Live classification requires an explicit execution flag and budget; never run it just to launch the dashboard. Do not commit credentials, receipts or checkpoints.
 
-The JSON file stores the unmodified advertisements, not the full response envelope or the simplified table. UTF-8 preserves Swedish characters. Raw downloads are excluded from Git and are created when you successfully execute the notebook. No downloaded dataset is bundled with this starter project. Empty responses are handled and saved as an empty list.
+## Methodology and limitations
 
-## Step 2: Six-month candidate collection
+- Search terms, JobTech/Platsbanken coverage, pagination and archival lag limit recall; this is not a representative sample of all Swedish employment demand.
+- AI classifications are provisional and have not been independently verified. Source-grounded evidence establishes traceability, not proof that the occupational judgment is correct.
+- Academic research, governance, adjacent roles and student/restricted opportunities remain distinguishable. Opportunity reporting scope takes precedence over academic scope; original scopes and overlapping flags remain available.
+- Distinct advertisement IDs can describe repeated content or recruitment campaigns. Same-content copies are identifiable and retained when their IDs differ.
+- Deterministic rules can miss wording or misinterpret context. Required alternatives are not individually mandatory. Language conflicts remain unspecified; years are not inferred from seniority.
+- The 1,778 relevant advertisements are the accepted analyzed subset, not the full collection. Evidence coverage varies by requirement type and filter.
 
-The reusable module is `src/collect_jobs.py`. The editable list in `config/search_terms.json` covers the five core roles, Analytics Engineer, BI Developer, Data Warehouse Developer, ML/AI Developer, and Swedish alternatives. All keyword matches are uncertain candidates for Step 3, including ads whose descriptions mention a role while the actual position is unrelated. No NLP or classification is implemented.
-
-### Run with the existing virtual environment
-
-```powershell
-cd C:\Users\zahir\Desktop\projects\swedish-data-jobs
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe -m src.collect_jobs --start 2026-04-21 --end 2026-10-21
-```
-
-`tzdata` supplies Swedish timezone rules on Windows. No activation or new environment is needed. The dates above are also the defaults; both calendar dates are included. Requests are sequential, at least one second apart, with a 90-second timeout and up to three retries after the first attempt. Retries use exponential backoff and honor `Retry-After`. Step 1's notebook and raw downloads are unchanged.
-
-For twelve months, change the dates:
-
-```powershell
-.\.venv\Scripts\python.exe -m src.collect_jobs --start 2025-10-21 --end 2026-10-21
-```
-
-Edit the terms JSON or pass `--terms-file path/to/terms.json`. Multiword terms use the documented quoted phrase syntax by default; a phrase may still match the description, so these remain uncertain candidates. Use `--broad-query` for unquoted searches if desired: these may match individual words, substantially increasing unrelated candidates and collection time. Other options include `--delay 2`, `--timeout 120`, `--retries 4`, `--page-size 100`, and `--output-dir data/collections`. Use `--help` for details. Each run creates a fresh UTC timestamped directory. Rerunning does not overwrite earlier results; resumable checkpoints are not implemented.
-
-### Sources, dates and deduplication
-
-Both official `/search` endpoints are used:
-
-- `https://jobsearch.api.jobtechdev.se/search`: active advertisements.
-- `https://historical.api.jobtechdev.se/search`: archived/removed advertisements.
-
-The collector reads and saves each API's official Swagger specification, using supported country/publication filters, sorting and pagination limits. Date bounds are padded to avoid API boundary ambiguity; the exact inclusive interval is enforced locally using only `publication_date`. Offset-aware timestamps are converted to Europe/Stockholm; naive timestamps are treated as Swedish local time. Deadlines and updates never substitute for publication dates.
-
-Both queries filter for Sweden. Only returned ads with identifiable Swedish country information and valid in-period publication dates enter `jobs.csv`. Missing municipality or region is allowed. Unknown/foreign locations and missing/out-of-period dates remain in the originals and an exclusion/review report.
-
-Numeric Platsbanken ids deduplicate active records and link Historical `original_id` to active `id` when available. Otherwise a source-specific archive id is retained. Missing ids receive an explicit content-hash fallback and a warning. Titles and employer-specific external ids never determine identity. All original source/version objects survive. The cleaned row prefers an eligible active version; otherwise it uses the first eligible historical version. Conflicting publication dates are flagged. See [API decisions](docs/api_notes.md) for official references and verified API behavior.
-
-### Outputs
-
-```text
-data/collections/
-  <run-id>.log
-  <run-id>/
-    configuration.json
-    jobsearch_swagger.json
-    historical_swagger.json
-    pages/000001.json ...
-    candidates.jsonl
-    jobs.csv
-    excluded_or_review.json
-    summary.json
-    summary.txt
-```
-
-- `pages/`: complete original API responses with source, term, parameters and retrieval time. Advertisement objects are unmodified. Schema snapshots exist only when successfully retrieved.
-- `candidates.jsonl`: one deduplicated candidate per line with every original JSON source/version, all source/term pairs and CSV inclusion status. No candidate is discarded based on title relevance.
-- `jobs.csv`: advertisement id, title, employer, publication date, municipality, region, full API-provided plain-text description, occupation/group/field classification, vacancies, API-provided URL, sources and terms. Additional columns retain original API identifiers, provenance and quality/review flags. Lists/objects are JSON strings inside cells; optional missing values are empty. Missing descriptions are flagged, not invented. UTF-8 with a BOM supports convenient Windows/Excel opening.
-- `excluded_or_review.json`: ids and date/geography details for candidates outside the requested scope or requiring review. Their originals remain available.
-- `summary.json` and `summary.txt`: downloaded occurrences, unique candidates, unique in-period Swedish candidates, observed publication-date range, counts by source/term, per-query/window status and unresolved issues. Overlapping windows, terms and sources cause repeated downloads; term counts are not additive.
-
-The collector prints absolute output paths. Downloads, reports and logs are Git-ignored. Candidates are held in memory; raw API pages are saved immediately. This implementation is intended for a portfolio-sized keyword collection, not national archive ingestion.
-
-### Completeness and bulk alternatives
-
-Both live contracts currently cap `offset` at 2000 and `limit` at 100. Overflowing date windows split into smaller windows. An unresolved one-day overflow, failed request, missing/non-exact or changing total, stalled pagination or interruption is logged and marks the run **incomplete**. Successfully returned data remains saved. Exit code `2` indicates incomplete results (`$LASTEXITCODE` in PowerShell); `0` means configured queries were exhausted. Invalid configuration stops before collection.
-
-**Query exhaustion does not establish complete market coverage.** Every summary includes `market_coverage_complete: false`: these are keyword candidates from Platsbanken, not every Swedish vacancy. Source coverage, archive lag, active-ad changes and the search-term list limit recall. Running during October 21 cannot cover later that day; rerun after the day closes and allow for ingestion lag. Review uncertain matches and quality flags in Step 3.
-
-The official [bulk catalogue](https://data.jobtechdev.se/annonser/historiska/index.html) provides historical JSONL ZIP datasets. On October 21, 2026 it listed 2026 Q1-Q3 but no Q4 file. Q2/Q3 could supplement April-September if query limits remain unresolved, but cannot cover October. Bulk ingestion is an investigated alternative, not implemented or claimed complete. JobStream snapshots are a documented alternative for active data, not a replacement for historical coverage. See [API notes](docs/api_notes.md).
-
-### Offline tests
-
-```powershell
-.\.venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-Mocked tests check pagination, date-window splitting and unresolved limits, retry/timeout behavior, cross-source identifier deduplication, archived versions, missing values, Swedish date boundaries, geography and partial-failure reporting. They use temporary project-local folders and never modify Step 1 data or contact the APIs.
-
-## Live validation on October 21, 2026
-
-The corrected collector completed all 80 configured source/term searches in run `20261021T124805411572Z` with no reported API or pagination issues:
-
-- 11,887 downloaded occurrences across 183 raw API pages.
-- 5,081 unique candidates before exact date/geography filtering.
-- 5,023 in-period Swedish candidates in the [cleaned CSV](data/collections/20261021T124805411572Z/jobs.csv): 835 found in active data and 4,188 in historical data.
-- 58 candidates excluded from the CSV or retained for date/geography review.
-- Observed publication dates: April 21 through October 21, 2026.
-
-See the [run summary](data/collections/20261021T124805411572Z/summary.txt) for term-level counts. These are uncertain candidates, not classified relevant jobs or complete market coverage. This run occurred during October 21. An earlier interrupted validation run is preserved separately and explicitly marked incomplete.
-
-All 19 mocked tests passed in the existing virtual environment. The saved CSV's required columns, unique ids, dates, provenance and row counts were verified against the raw pages. SHA-256 checks confirmed that the Step 1 notebook and original raw download remained byte-for-byte unchanged.
-
-## Future steps (not implemented)
-
-1. Step 3: review uncertain candidates, resolve quality flags and define role classifications.
-2. Evaluate coverage gaps and historical bulk supplementation if needed.
-3. Extract technical skills, language, education and experience requirements.
-4. Compare demand and monthly trends, documenting coverage limitations.
-
-No databases, dashboards, machine learning, cloud infrastructure, scheduling or scraping of other job websites are included.
+The project publishes aggregate research findings and synthetic examples, while preserving original advertisements and audit evidence locally.

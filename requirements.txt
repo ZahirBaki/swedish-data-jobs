@@ -1,5 +1,9 @@
-requests
-pandas
-jupyter
-ipykernel
-tzdata
+# Direct dependencies pinned to the working portfolio environment.
+requests==2.34.2
+pandas==3.0.6
+tzdata==2026.5
+streamlit==1.66.1
+plotly==7.1.0
+# Notebook exploration and evaluation (not needed by the dashboard itself).
+jupyter==1.1.1
+ipykernel==7.4.0
